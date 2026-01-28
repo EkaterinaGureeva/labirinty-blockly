@@ -1,0 +1,1605 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Лабиринт Blockly — 50 уровней (RU)</title>
+
+  <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+  <script src="https://unpkg.com/blockly/javascript.min.js"></script>
+  <script src="https://unpkg.com/blockly/msg/ru.js"></script>
+
+  <style>
+    :root{
+      --bg:#f3f4f6;
+      --card:#ffffff;
+      --border:#e5e7eb;
+      --muted:#6b7280;
+      --text:#111827;
+      --shadow: 0 8px 24px rgba(17,24,39,.10);
+      --purple:#7c3aed;
+      --purple2:#8b5cf6;
+      --btn:#7c3aed;
+      --btnHover:#6d28d9;
+      --green:#10b981;
+      --red:#ef4444;
+      --amber:#f59e0b;
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow:auto;
+    }
+    .wrap{
+      height:100dvh;
+      height:100svh;
+      display:grid;
+      grid-template-columns: 1.05fr 1fr;
+      gap: 18px;
+      padding: 18px;
+      padding-left: max(18px, env(safe-area-inset-left));
+      padding-right: max(18px, env(safe-area-inset-right));
+      padding-top: max(18px, env(safe-area-inset-top));
+      padding-bottom: max(18px, env(safe-area-inset-bottom));
+      min-height:0;
+    }
+    .card{
+      background: var(--card);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      min-height:0;
+      overflow:auto;
+      display:flex;
+      flex-direction:column;
+    }
+    .head{
+      padding: 18px 18px 12px 18px;
+      border-bottom: 1px solid var(--border);
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 12px;
+    }
+    .head h1, .head h2{ margin:0; font-size: 20px; line-height:1.2; }
+    .sub{ margin-top:6px; font-size: 13px; color: var(--muted); line-height:1.35; }
+    .headRight{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .select{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius: 12px;
+      padding: 10px 10px;
+      font-size: 13px;
+      min-width: 240px;
+      cursor:pointer;
+    }
+    .starsBadge{
+      display:flex; align-items:center; gap:8px;
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 13px;
+      user-select:none;
+    }
+    .starsBadge span{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      letter-spacing: .5px;
+    }
+    .leftBody{
+      padding: 18px;
+      display:flex;
+      flex-direction:column;
+      gap: 14px;
+      min-height:0;
+    }
+    .stage{
+      flex: 1 1 auto;
+      min-height: 260px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border:1px solid var(--border);
+      border-radius: 14px;
+      background: #f9fafb;
+    }
+    canvas{ width: 100%; max-width: 520px; height: auto; display:block; }
+    .controls{ display:flex; gap:10px; align-items:center; }
+    .run{
+      flex: 1 1 auto;
+      display:inline-flex; align-items:center; justify-content:center; gap:10px;
+      border:none; cursor:pointer;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 14px;
+      color:#fff;
+      background: linear-gradient(180deg, var(--btn), var(--purple2));
+      box-shadow: 0 10px 18px rgba(124,58,237,.20);
+      user-select:none;
+    }
+    .run:hover{ background: linear-gradient(180deg, var(--btnHover), var(--purple)); }
+    .iconBtn{
+      width: 46px; height: 46px;
+      border-radius: 12px;
+      border:1px solid var(--border);
+      background:#fff;
+      cursor:pointer;
+      display:grid; place-items:center;
+      font-size: 16px;
+      user-select:none;
+    }
+    .iconBtn:hover{ background:#f9fafb; }
+
+    .miniRow{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .pill{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:999px;
+      padding: 8px 10px;
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .msg{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius: 14px;
+      padding: 12px 12px;
+      font-size: 13px;
+      color: var(--muted);
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      line-height:1.35;
+    }
+    .msg strong{ color: var(--text); }
+    .msg.ok{ border-color: rgba(16,185,129,.35); background: rgba(16,185,129,.08); color:#065f46; }
+    .msg.err{ border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.08); color:#7f1d1d; }
+    .msg.warn{ border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.08); color:#78350f; }
+
+    .rightBody{ position:relative; flex: 1 1 auto; min-height:0; }
+    #blocklyDiv{ position:absolute; inset:0; touch-action: none; }
+    .footerHint{
+      padding: 10px 14px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--muted);
+      background:#fff;
+    }
+
+    #errorBanner{
+      position:fixed;
+      left:18px; right:18px; bottom:18px;
+      background: rgba(239,68,68,.10);
+      border:1px solid rgba(239,68,68,.35);
+      color:#7f1d1d;
+      border-radius: 14px;
+      padding: 10px 12px;
+      box-shadow: var(--shadow);
+      display:none;
+      z-index: 99999;
+      font-size: 13px;
+      line-height:1.35;
+    }
+    #errorBanner code{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+    }
+
+    .modal{
+      position:fixed;
+      inset:0;
+      background: rgba(17,24,39,.45);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 18px;
+      z-index: 9999;
+    }
+    .modalCard{
+      width:min(980px, 100%);
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.18);
+      overflow:auto;
+    }
+    .modalHead{
+      padding: 14px 16px;
+      border-bottom:1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+    }
+    .modalHead b{ font-size: 16px; }
+    .modalBody{ padding: 14px 16px; color: var(--text); }
+    .modalActions{
+      padding: 14px 16px;
+      border-top:1px solid var(--border);
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .btn{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius: 12px;
+      padding: 10px 12px;
+      cursor:pointer;
+      font-size: 13px;
+    }
+    .btn.primary{
+      border-color: rgba(124,58,237,.35);
+      background: rgba(124,58,237,.10);
+      color: #4c1d95;
+    }
+    .btn.good{
+      border-color: rgba(16,185,129,.35);
+      background: rgba(16,185,129,.10);
+      color:#065f46;
+    }
+    .btn.danger{
+      border-color: rgba(239,68,68,.35);
+      background: rgba(239,68,68,.10);
+      color:#7f1d1d;
+    }
+    .btn.locked{
+      opacity: .75;
+    }
+
+    .grid2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .field label{ font-size: 12px; color: var(--muted); }
+    .input, .textarea{
+      border:1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 10px;
+      font-size: 13px;
+      outline:none;
+      width:100%;
+      background:#fff;
+    }
+    .textarea{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      min-height: 220px;
+      resize: vertical;
+    }
+
+    @media (max-width: 980px){
+      body{overflow:auto}
+      .wrap{
+        grid-template-columns: 1fr;
+        height:auto;
+        min-height: 100dvh;
+        min-height: 100svh;
+      }
+      .head{ gap: 10px; }
+      .headRight{ justify-content:flex-start; }
+      .select{ min-width: 200px; width: 100%; }
+      .rightBody{
+        height: 60vh;
+        min-height: 420px;
+      }
+      .stage{ min-height: 220px; }
+    }
+    @media (max-width: 520px){
+      .wrap{ padding: 12px; padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); }
+      .head{ padding: 14px 14px 10px 14px; }
+      .leftBody{ padding: 14px; }
+      .rightBody{ height: 58vh; min-height: 380px; }
+      .controls{ gap: 8px; }
+      .iconBtn{ width: 44px; height: 44px; }
+      .run{ padding: 14px 12px; }
+      .pill{ font-size: 11px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <section class="card">
+      <div class="head">
+        <div>
+          <h1 id="leftTitle">Лабиринт</h1>
+          <div class="sub" id="leftSub">Простой путь — доберись до цели!</div>
+        </div>
+
+        <div class="headRight">
+          <select class="select" id="levelSelect" title="Выбор уровня"></select>
+
+          <div class="starsBadge" title="Лучшая оценка за уровень">
+            ⭐ <span id="starsText">☆☆☆☆☆</span>
+          </div>
+
+          <!-- Всегда закрыто: PIN спрашивается каждый раз -->
+          <button class="btn locked" id="editorOpenBtn" title="Редактор уровней (только учитель)">🔒 Редактор</button>
+        </div>
+      </div>
+
+      <div class="leftBody">
+        <div class="miniRow">
+          <div class="pill" id="goalPill">Задание: —</div>
+          <div class="pill" id="limitPill">Ограничение: —</div>
+          <div class="pill" id="statusPill">Состояние: Готово</div>
+          <div class="pill" id="minPill">Минимум: —</div>
+        </div>
+
+        <div class="stage">
+          <canvas id="canvas" width="520" height="520"></canvas>
+        </div>
+
+        <div class="controls">
+          <button class="run" id="runBtn">▶ Запустить код</button>
+          <button class="iconBtn" id="stepBtn" title="Шаг">⏭</button>
+          <button class="iconBtn" id="resetBtn" title="Сброс">↺</button>
+        </div>
+
+        <div class="msg" id="msg">
+          <div>ℹ️</div>
+          <div><strong>Подсказка:</strong> перетащи блоки в поле справа и нажми «Запустить код».</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="head">
+        <div>
+          <h2>Твой код</h2>
+          <div class="sub">Перетаскивай блоки, чтобы собрать программу.</div>
+        </div>
+        <div class="headRight">
+          <div class="pill" id="blocksInfo">Блоков: 0</div>
+          <div class="pill" id="actionsInfo">Команд: 0</div>
+          <button class="btn" id="showCodeBtn" title="Показать сгенерированный JavaScript">Код</button>
+        </div>
+      </div>
+      <div class="rightBody">
+        <div id="blocklyDiv"></div>
+      </div>
+      <div class="footerHint">Подсказка: увеличение/уменьшение — колесо мыши или кнопки зума.</div>
+    </section>
+  </div>
+
+  <div id="errorBanner"></div>
+
+  <div class="modal" id="finishModal">
+    <div class="modalCard">
+      <div class="modalHead">
+        <b>🏆 Ты прошёл все уровни!</b>
+        <button class="btn" id="finishCloseBtn">Закрыть</button>
+      </div>
+      <div class="modalBody">
+        Поздравляем! 🎉<br><br>
+        Теперь ты можешь:
+        <ul>
+          <li>перепройти уровни и улучшить оценку (звёзды)</li>
+          <li>учитель может настроить уровни через PIN-редактор</li>
+        </ul>
+      </div>
+      <div class="modalActions">
+        <button class="btn good" id="finishReplayBtn">Перепройти сначала</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="editorModal">
+    <div class="modalCard">
+      <div class="modalHead">
+        <b>🧩 Редактор уровней (учитель)</b>
+        <button class="btn" id="editorCloseBtn">Закрыть</button>
+      </div>
+      <div class="modalBody">
+        <div class="grid2">
+          <div>
+            <div class="field">
+              <label>Название</label>
+              <input class="input" id="edTitle" />
+            </div>
+            <div class="field">
+              <label>Задание</label>
+              <input class="input" id="edGoal" />
+            </div>
+            <div class="field">
+              <label>Подсказка</label>
+              <input class="input" id="edHint" />
+            </div>
+
+            <div class="field">
+              <label>Ограничения</label>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+                <label style="display:flex;gap:8px;align-items:center;font-size:13px;">
+                  <input type="checkbox" id="edRequireLoop" />
+                  Требовать цикл
+                </label>
+
+                <span style="font-size:13px;color:var(--muted);">Макс. блоков:</span>
+                <input class="input" id="edMaxBlocks" type="number" min="1" style="width:110px" />
+
+                <span style="font-size:13px;color:var(--muted);">Макс. команд:</span>
+                <input class="input" id="edMaxCommands" type="number" min="1" style="width:110px" />
+
+                <span style="font-size:13px;color:var(--muted);">Пар (команд):</span>
+                <input class="input" id="edParActions" type="number" min="1" style="width:110px" />
+              </div>
+              <div style="margin-top:8px;color:var(--muted);font-size:12px;">
+                Совпадение критериев проверяется: <b>макс. команд всегда будет ≥ реального минимума</b> (solver).
+              </div>
+            </div>
+
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+              <button class="btn good" id="edSaveBtn">Сохранить изменения</button>
+              <button class="btn" id="edRecalcBtn" title="Пересчитать минимум/пар/лимиты">Пересчитать критерии</button>
+              <button class="btn danger" id="edResetOverridesBtn" title="Сбросить правки этого уровня">Сбросить правки</button>
+            </div>
+
+            <hr style="border:none;border-top:1px solid var(--border); margin: 14px 0;">
+
+            <!-- ✅ Смена PIN прямо в режиме учителя -->
+            <div class="field">
+              <label>PIN учителя</label>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+                <button class="btn primary" id="changePinBtn">Сменить PIN</button>
+                <span style="font-size:12px;color:var(--muted);">
+                  PIN хранится на этом компьютере (в браузере).
+                </span>
+              </div>
+            </div>
+
+            <hr style="border:none;border-top:1px solid var(--border); margin: 14px 0;">
+
+            <div class="field">
+              <label>Экспорт/Импорт JSON (для учителя)</label>
+              <textarea class="textarea" id="edJson"></textarea>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+                <button class="btn" id="edExportBtn">Экспорт</button>
+                <button class="btn primary" id="edImportBtn">Импорт</button>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="field">
+              <label>Сетка лабиринта</label>
+              <textarea class="textarea" id="edGrid"></textarea>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+                <button class="btn" id="edPreviewBtn">Предпросмотр</button>
+              </div>
+              <div style="font-size:12px;color:var(--muted);margin-top:8px;">
+                Символы: <code>#</code> стена, <code>.</code> путь, <code>S</code> старт, <code>G</code> цель.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modalActions">
+        <button class="btn" id="editorHelpBtn">Как работает PIN</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* =========================
+   Teacher PIN (спрашиваем каждый раз)
+========================= */
+const TEACHER_PIN_KEY = "blockly_maze_teacher_pin_v1";
+const DEFAULT_TEACHER_PIN = "2580";
+
+function getTeacherPin(){
+  const stored = localStorage.getItem(TEACHER_PIN_KEY);
+  return (stored && String(stored).trim().length >= 4) ? String(stored) : DEFAULT_TEACHER_PIN;
+}
+function requireTeacher(){
+  const pin = prompt("Введите PIN учителя:");
+  if(pin === null) return false;
+  if(String(pin) === getTeacherPin()) return true;
+  alert("Неверный PIN.");
+  return false;
+}
+function setTeacherPin(newPin){
+  localStorage.setItem(TEACHER_PIN_KEY, String(newPin));
+}
+
+/* =========================
+   Error UI
+========================= */
+function escapeHtml(s){
+  return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+}
+function showFatalError(err){
+  const b = document.getElementById("errorBanner");
+  b.style.display = "block";
+  const msg = (err && err.stack) ? err.stack : String(err);
+  b.innerHTML = `❌ Ошибка в приложении:<br><code>${escapeHtml(msg)}</code>`;
+}
+window.addEventListener("error", (e)=>{ showFatalError(e.error || e.message || e); });
+
+/* =========================
+   Storage
+========================= */
+const STORAGE_KEY = "blockly_maze_progress_v6";
+const CUSTOM_LEVELS_KEY = "blockly_maze_custom_levels_v6";
+const OVERRIDES_KEY = "blockly_maze_level_overrides_v6";
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { unlocked: 1, stars: {}, finishedAll: false };
+    const p = JSON.parse(raw);
+    return { unlocked: Number(p.unlocked || 1), stars: p.stars || {}, finishedAll: !!p.finishedAll };
+  } catch { return { unlocked: 1, stars: {}, finishedAll: false }; }
+}
+function saveProgress(p) { localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }
+function getBestStars(levelId) { const p = loadProgress(); return Number(p.stars[String(levelId)] || 0); }
+function setBestStars(levelId, stars) {
+  const p = loadProgress();
+  const key = String(levelId);
+  const prev = Number(p.stars[key] || 0);
+  if (stars > prev) p.stars[key] = stars;
+  saveProgress(p);
+}
+function unlockNextLevel(currentId) {
+  const p = loadProgress();
+  const next = currentId + 1;
+  if (next > p.unlocked) p.unlocked = next;
+  const total = getAllLevels().length;
+  if (p.unlocked > total) p.unlocked = total;
+  saveProgress(p);
+}
+function markFinishedAll() { const p = loadProgress(); p.finishedAll = true; saveProgress(p); }
+
+function loadCustomLevels() {
+  try {
+    const raw = localStorage.getItem(CUSTOM_LEVELS_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch { return []; }
+}
+function saveCustomLevels(levels) { localStorage.setItem(CUSTOM_LEVELS_KEY, JSON.stringify(levels)); }
+
+function loadOverrides(){
+  try{
+    const raw = localStorage.getItem(OVERRIDES_KEY);
+    if(!raw) return {};
+    const obj = JSON.parse(raw);
+    return (obj && typeof obj === "object") ? obj : {};
+  }catch{ return {}; }
+}
+function saveOverrides(map){ localStorage.setItem(OVERRIDES_KEY, JSON.stringify(map)); }
+function clearOverrideFor(id){
+  const m = loadOverrides();
+  delete m[String(id)];
+  saveOverrides(m);
+}
+
+/* =========================
+   Levels base (50)
+========================= */
+const TUTOR_LEVELS = [
+  { id: 1,  title:"Уровень 1",  subtitle:"Сделай один шаг вперёд", goal:"Дойди до цели.", hint:"Используй блок «вперёд».", requireLoop:false, maxBlocks:3,  toolbox:"move",
+    grid:["#####","#S.G#","#####"] },
+  { id: 2,  title:"Уровень 2",  subtitle:"Несколько шагов", goal:"Дойди до цели.", hint:"Поставь несколько блоков «вперёд».", requireLoop:false, maxBlocks:5,  toolbox:"move",
+    grid:["#######","#S...G#","#######"] },
+  { id: 3,  title:"Уровень 3",  subtitle:"Первый поворот", goal:"Дойди до цели.", hint:"Используй повороты.", requireLoop:false, maxBlocks:9, toolbox:"turn",
+    grid:["#######","#S#...#","#.#.#G#","#...#.#","#######"] },
+  { id: 4,  title:"Уровень 4",  subtitle:"Два поворота", goal:"Дойди до цели.", hint:"Комбинируй «вперёд» и повороты.", requireLoop:false, maxBlocks:12, toolbox:"turn",
+    grid:["########","#S#....#","#.#.##.#","#...#G.#","########"] },
+  { id: 5,  title:"Уровень 5",  subtitle:"Маленький лабиринт", goal:"Дойди до цели.", hint:"Думай о последовательности.", requireLoop:false, maxBlocks:14, toolbox:"turn",
+    grid:["#########","#S#...#G#","#.#.#.#.#","#...#...#","#########"] },
+  { id: 6,  title:"Уровень 6",  subtitle:"Коридор с поворотом", goal:"Дойди до цели.", hint:"Сначала вперёд, затем поверни.", requireLoop:false, maxBlocks:16, toolbox:"turn",
+    grid:["#########","#S....#.#","#####.#.#","#.....#G#","#########"] },
+  { id: 7,  title:"Уровень 7",  subtitle:"Длинный путь", goal:"Дойди до цели.", hint:"Скоро пригодится цикл 🙂", requireLoop:false, maxBlocks:18, toolbox:"turn",
+    grid:["###########","#S........#","#####.#####","#........G#","###########"] },
+  { id: 8,  title:"Уровень 8",  subtitle:"Два коридора", goal:"Дойди до цели.", hint:"Следи за стенами и поворотами.", requireLoop:false, maxBlocks:20, toolbox:"turn",
+    grid:["###########","#S#.......#","#.#.#####.#","#...#...#G#","#####.#.#.#","#.......#.#","###########"] },
+  { id: 9,  title:"Уровень 9",  subtitle:"Готовимся к циклам", goal:"Дойди до цели.", hint:"Будет удобнее повторять одинаковые шаги.", requireLoop:false, maxBlocks:22, toolbox:"turn",
+    grid:["############","#S.........#","######.#####","#......#...#","#.######.#G#","#........#.#","############"] },
+  { id: 10, title:"Уровень 10", subtitle:"Последний без обязательного цикла", goal:"Дойди до цели.", hint:"Скоро цикл станет обязательным.", requireLoop:false, maxBlocks:22, toolbox:"turn",
+    grid:["############","#S..#......#","#.#.#.####.#","#.#...#..#.#","#.#####..#G#","#..........#","############"] },
+];
+
+function mulberry32(seed){
+  return function(){
+    let t = seed += 0x6D2B79F5;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function generateMazeAscii(sizeOdd, seed){
+  const rand = mulberry32(seed);
+  const N = sizeOdd;
+  const g = Array.from({length:N}, () => Array.from({length:N}, () => "#"));
+  function inBounds(x,y){ return x>0 && y>0 && x<N-1 && y<N-1; }
+  function shuffledDirs(){
+    const dirs = [[0,-2],[2,0],[0,2],[-2,0]];
+    for(let i=dirs.length-1;i>0;i--){
+      const j = Math.floor(rand()*(i+1));
+      [dirs[i],dirs[j]]=[dirs[j],dirs[i]];
+    }
+    return dirs;
+  }
+  const stack = [[1,1]];
+  g[1][1] = ".";
+  while(stack.length){
+    const [x,y] = stack[stack.length-1];
+    const dirs = shuffledDirs();
+    let moved = false;
+    for(const [dx,dy] of dirs){
+      const nx = x+dx, ny = y+dy;
+      if(inBounds(nx,ny) && g[ny][nx] === "#"){
+        g[y+dy/2][x+dx/2] = ".";
+        g[ny][nx] = ".";
+        stack.push([nx,ny]);
+        moved = true;
+        break;
+      }
+    }
+    if(!moved) stack.pop();
+  }
+  g[1][1] = "S";
+  g[N-2][N-2] = "G";
+  return g.map(r=>r.join(""));
+}
+function buildGeneratedLevels(){
+  const levels = [];
+  let id = 11;
+  const groups = [
+    {count:10, size:11, toolbox:"repeat", requireLoop:true,  maxBlocksBase:14},
+    {count:10, size:13, toolbox:"if",     requireLoop:true,  maxBlocksBase:16},
+    {count:10, size:15, toolbox:"if",     requireLoop:true,  maxBlocksBase:18},
+    {count:10, size:17, toolbox:"while",  requireLoop:true,  maxBlocksBase:20},
+  ];
+  const seedBase = 9001;
+  for(const g of groups){
+    for(let i=0;i<g.count;i++){
+      const lvlId = id++;
+      const maze = generateMazeAscii(g.size, seedBase + lvlId*101);
+      const k = i / Math.max(1,(g.count-1));
+      const maxBlocks = Math.max(10, Math.round(g.maxBlocksBase + k*4));
+      levels.push({
+        id: lvlId,
+        title: `Уровень ${lvlId}`,
+        subtitle:
+          (lvlId<=20) ? "Используй цикл, чтобы сократить код" :
+          (lvlId<=30) ? "Используй условия и цикл" :
+          (lvlId<=40) ? "Оптимизируй решение" :
+                        "Мастер: циклы + условия",
+        goal:
+          (lvlId<=20) ? "Пройди лабиринт. Обязательно используй цикл." :
+          (lvlId<=30) ? "Пройди лабиринт. Используй цикл и проверку пути." :
+          (lvlId<=40) ? "Пройди лабиринт. Уложись в лимиты." :
+                        "Пройди сложный лабиринт.",
+        hint:
+          (lvlId<=20) ? "Где повторяются шаги — используй «повторить»." :
+          (lvlId<=30) ? "Используй «если впереди свободно», чтобы не врезаться." :
+          (lvlId<=40) ? "Комбинируй цикл + условия." :
+                        "Используй «повторять пока не цель».",
+        requireLoop: g.requireLoop,
+        maxBlocks,
+        toolbox: g.toolbox,
+        grid: maze
+      });
+    }
+  }
+  return levels;
+}
+const GENERATED_LEVELS = buildGeneratedLevels();
+
+/* =========================
+   Blockly locale (safe)
+========================= */
+try{
+  if (Blockly && typeof Blockly.setLocale === "function" && Blockly.Msg) Blockly.setLocale(Blockly.Msg);
+}catch{}
+
+/* =========================
+   Custom blocks (RU)
+========================= */
+Blockly.defineBlocksWithJsonArray([
+  { type:"maze_move_forward", message0:"вперёд", previousStatement:null, nextStatement:null, colour:"#7c3aed" },
+  { type:"maze_turn_left", message0:"повернуть налево", previousStatement:null, nextStatement:null, colour:"#10b981" },
+  { type:"maze_turn_right", message0:"повернуть направо", previousStatement:null, nextStatement:null, colour:"#10b981" },
+  {
+    type:"maze_repeat_times",
+    message0:"повторить %1 раз %2",
+    args0:[
+      { type:"field_number", name:"COUNT", value:4, min:1, max:999, precision:1 },
+      { type:"input_statement", name:"DO" }
+    ],
+    previousStatement:null, nextStatement:null, colour:"#f59e0b"
+  },
+  {
+    type:"maze_if_path",
+    message0:"если впереди свободно то %1",
+    args0:[ {type:"input_statement", name:"DO"} ],
+    previousStatement:null, nextStatement:null, colour:"#f59e0b"
+  },
+  {
+    type:"maze_until_goal",
+    message0:"повторять пока не цель %1",
+    args0:[ {type:"input_statement", name:"DO"} ],
+    previousStatement:null, nextStatement:null, colour:"#f59e0b"
+  }
+]);
+
+if(!Blockly.JavaScript) throw new Error("Не найден генератор Blockly.JavaScript.");
+
+Blockly.JavaScript.forBlock["maze_move_forward"] = ()=> "actions.push({t:'F'});\n";
+Blockly.JavaScript.forBlock["maze_turn_left"]    = ()=> "actions.push({t:'L'});\n";
+Blockly.JavaScript.forBlock["maze_turn_right"]   = ()=> "actions.push({t:'R'});\n";
+Blockly.JavaScript.forBlock["maze_repeat_times"] = (block)=>{
+  const n = Number(block.getFieldValue("COUNT") || 1);
+  const inner = Blockly.JavaScript.statementToCode(block, "DO");
+  return `for (let i=0;i<${Math.max(1,n)};i++) { api.guard();\n${inner}}\n`;
+};
+Blockly.JavaScript.forBlock["maze_if_path"] = (block)=>{
+  const inner = Blockly.JavaScript.statementToCode(block, "DO");
+  return `api.guard();\nif (api.isPathForward()) {\n${inner}}\n`;
+};
+Blockly.JavaScript.forBlock["maze_until_goal"] = (block)=>{
+  const inner = Blockly.JavaScript.statementToCode(block, "DO");
+  return `while (!api.isAtGoal()) {\napi.guard();\n${inner}}\n`;
+};
+
+/* =========================
+   Toolbox
+========================= */
+function toolboxXmlFor(level){
+  const mode = level.toolbox || "turn";
+  const move = `
+    <category name="Движение" colour="#7c3aed">
+      <block type="maze_move_forward"></block>
+    </category>`;
+  const turns = `
+    <category name="Повороты" colour="#10b981">
+      <block type="maze_turn_left"></block>
+      <block type="maze_turn_right"></block>
+    </category>`;
+  const loops = `
+    <category name="Циклы" colour="#f59e0b">
+      <block type="maze_repeat_times"></block>
+      <block type="maze_until_goal"></block>
+    </category>`;
+  const cond = `
+    <category name="Условия" colour="#f59e0b">
+      <block type="maze_if_path"></block>
+    </category>`;
+  let xml = `<xml>`;
+  if(mode==="move") xml += move;
+  else if(mode==="turn") xml += move + turns;
+  else if(mode==="repeat") xml += move + turns + loops;
+  else if(mode==="if") xml += move + turns + loops + cond;
+  else xml += move + turns + loops + cond;
+  xml += `</xml>`;
+  return xml;
+}
+function toolboxXmlToDom(xmlText){
+  try{ if (Blockly.utils?.xml?.textToDom) return Blockly.utils.xml.textToDom(xmlText); }catch{}
+  return Blockly.Xml.textToDom(xmlText);
+}
+
+/* =========================
+   Solver (shortest commands)
+========================= */
+const DIRS = ["N","E","S","W"];
+const VEC = { N:[0,-1], E:[1,0], S:[0,1], W:[-1,0] };
+
+function parseGrid(level){
+  const g = level.grid.map(r=>r.split(""));
+  const H = g.length, W = g[0].length;
+  let S=null,G=null;
+  for(let y=0;y<H;y++){
+    for(let x=0;x<W;x++){
+      if(g[y][x]==="S") S={x,y};
+      if(g[y][x]==="G") G={x,y};
+    }
+  }
+  if(!S || !G) return null;
+  return {g,W,H,S,G};
+}
+function shortestCommands(level){
+  const p = parseGrid(level);
+  if(!p) return Infinity;
+  const {g,W,H,S,G} = p;
+  const inb=(x,y)=>x>=0&&y>=0&&x<W&&y<H;
+  const free=(x,y)=>inb(x,y)&&g[y][x]!=="#";
+
+  const start = {x:S.x,y:S.y,d:"E"};
+  const q = [];
+  const dist = new Map();
+  const key = (x,y,d)=>`${x},${y},${d}`;
+  q.push(start);
+  dist.set(key(start.x,start.y,start.d), 0);
+
+  while(q.length){
+    const cur = q.shift();
+    const cd = dist.get(key(cur.x,cur.y,cur.d));
+    if(cur.x===G.x && cur.y===G.y) return cd;
+
+    { // L
+      const nd = DIRS[(DIRS.indexOf(cur.d)+3)%4];
+      const k = key(cur.x,cur.y,nd);
+      if(!dist.has(k)){ dist.set(k, cd+1); q.push({x:cur.x,y:cur.y,d:nd}); }
+    }
+    { // R
+      const nd = DIRS[(DIRS.indexOf(cur.d)+1)%4];
+      const k = key(cur.x,cur.y,nd);
+      if(!dist.has(k)){ dist.set(k, cd+1); q.push({x:cur.x,y:cur.y,d:nd}); }
+    }
+    { // F
+      const [dx,dy]=VEC[cur.d];
+      const nx=cur.x+dx, ny=cur.y+dy;
+      if(free(nx,ny)){
+        const k = key(nx,ny,cur.d);
+        if(!dist.has(k)){ dist.set(k, cd+1); q.push({x:nx,y:ny,d:cur.d}); }
+      }
+    }
+  }
+  return Infinity;
+}
+
+/* =========================
+   Overrides + normalize criteria
+========================= */
+function applyLevelOverrides(level){
+  const m = loadOverrides();
+  const o = m[String(level.id)];
+  if(!o) return level;
+  return {...level, ...o};
+}
+function normalizeCriteria(level){
+  const min = shortestCommands(level);
+  const minCommands = Number.isFinite(min) ? min : 9999;
+
+  let maxCommands = level.maxCommands;
+  if(!Number.isFinite(maxCommands)) {
+    const slack = (minCommands<=12) ? 2 : (minCommands<=40) ? 6 : 10;
+    maxCommands = minCommands + slack;
+  } else {
+    maxCommands = Math.max(maxCommands, minCommands);
+  }
+
+  let parActions = level.parActions;
+  if(!Number.isFinite(parActions)) parActions = Math.max(1, minCommands);
+  parActions = Math.max(1, Math.min(parActions, maxCommands));
+
+  return {...level, minCommands, maxCommands, parActions};
+}
+function getAllLevels(){
+  const base = [...TUTOR_LEVELS, ...GENERATED_LEVELS, ...loadCustomLevels()];
+  return base.map(l => normalizeCriteria(applyLevelOverrides(l)));
+}
+
+/* =========================
+   Game + UI
+========================= */
+const $ = id => document.getElementById(id);
+const canvas = $("canvas");
+const ctx = canvas.getContext("2d");
+
+let levelIndex = 0;
+let grid = [];
+let w=0,h=0;
+let player = {x:0,y:0,dir:"E"};
+let start  = {x:0,y:0,dir:"E"};
+let goal   = {x:0,y:0};
+
+let actionsQueue = [];
+let ip = 0;
+let running = false;
+let timer = null;
+
+function setMsg(kind, text){
+  const el = $("msg");
+  el.classList.remove("ok","err","warn");
+  if(kind==="ok") el.classList.add("ok");
+  if(kind==="err") el.classList.add("err");
+  if(kind==="warn") el.classList.add("warn");
+  el.innerHTML = `<div>${kind==="ok"?"✅":kind==="err"?"⚠️":kind==="warn"?"🟡":"ℹ️"}</div><div>${text}</div>`;
+}
+function setStatus(text){ $("statusPill").textContent = "Состояние: " + text; }
+function isInside(x,y){ return x>=0 && y>=0 && x<w && y<h; }
+
+const api = {
+  _ticks: 0,
+  guard(){
+    api._ticks++;
+    if(api._ticks > 14000) throw new Error("Слишком много операций. Возможно, бесконечный цикл.");
+  },
+  isPathForward(){
+    const [dx,dy] = VEC[player.dir];
+    const nx = player.x + dx, ny = player.y + dy;
+    return isInside(nx,ny) && grid[ny][nx] !== "#";
+  },
+  isAtGoal(){ return player.x===goal.x && player.y===goal.y; }
+};
+
+const workspace = Blockly.inject("blocklyDiv", {
+  toolbox: toolboxXmlToDom(toolboxXmlFor(getAllLevels()[0])),
+  trashcan: true,
+  zoom: { controls:true, wheel:true, startScale:0.95, maxScale:1.25, minScale:0.55, scaleSpeed:1.1 },
+  grid: { spacing: 20, length: 3, colour: "#e5e7eb", snap: true },
+  theme: Blockly.Theme.defineTheme("lightMazeTheme", {
+    base: Blockly.Themes.Classic,
+    componentStyles: {
+      workspaceBackgroundColour: "#fafafa",
+      toolboxBackgroundColour: "#f3f4f6",
+      toolboxForegroundColour: "#111827",
+      flyoutBackgroundColour: "#ffffff",
+      flyoutForegroundColour: "#111827",
+      scrollbarColour: "#d1d5db",
+      insertionMarkerColour: "#10b981",
+      insertionMarkerOpacity: 0.35
+    }
+  })
+});
+
+function parseLevel(level){
+  grid = level.grid.map(r=>r.split(""));
+  h = grid.length;
+  w = grid[0].length;
+
+  let foundS=false, foundG=false;
+  for(let y=0;y<h;y++){
+    for(let x=0;x<w;x++){
+      if(grid[y][x]==="S"){ start={x,y,dir:"E"}; foundS=true; }
+      if(grid[y][x]==="G"){ goal={x,y}; foundG=true; }
+    }
+  }
+  if(!foundS || !foundG) throw new Error("Уровень повреждён: не найден S или G.");
+}
+
+function draw(){
+  const pad = 16;
+  const size = Math.min(canvas.width, canvas.height) - pad*2;
+  const cell = Math.floor(size / Math.max(w,h));
+  const offX = Math.floor((canvas.width - cell*w)/2);
+  const offY = Math.floor((canvas.height - cell*h)/2);
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = "#f9fafb";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  for(let y=0;y<h;y++){
+    for(let x=0;x<w;x++){
+      const px = offX + x*cell, py = offY + y*cell;
+
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(px,py,cell,cell);
+
+      if(grid[y][x]==="#"){
+        ctx.fillStyle = "#e5e7eb";
+        ctx.fillRect(px,py,cell,cell);
+      }
+
+      ctx.strokeStyle = "#f3f4f6";
+      ctx.strokeRect(px+0.5,py+0.5,cell-1,cell-1);
+
+      if(grid[y][x]==="S") {
+        ctx.fillStyle = "rgba(124,58,237,.12)";
+        ctx.fillRect(px,py,cell,cell);
+        ctx.fillStyle = "#6d28d9";
+        ctx.font = `${Math.max(10, Math.floor(cell*0.35))}px system-ui`;
+        ctx.textAlign="center"; ctx.textBaseline="middle";
+        ctx.fillText("S", px+cell/2, py+cell/2);
+      }
+      if(grid[y][x]==="G") {
+        ctx.fillStyle = "rgba(16,185,129,.12)";
+        ctx.fillRect(px,py,cell,cell);
+        ctx.fillStyle = "#059669";
+        ctx.beginPath();
+        ctx.arc(px+cell/2, py+cell/2, cell*0.22, 0, Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(px+cell/2, py+cell/2, cell*0.10, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+  }
+
+  const cx = offX + player.x*cell + cell/2;
+  const cy = offY + player.y*cell + cell/2;
+  ctx.save();
+  ctx.fillStyle = "#7c3aed";
+  ctx.beginPath(); ctx.arc(cx,cy,cell*0.22,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  const s = cell*0.20;
+  if(player.dir==="N"){ ctx.moveTo(cx, cy - s); ctx.lineTo(cx - s*0.75, cy + s*0.7); ctx.lineTo(cx + s*0.75, cy + s*0.7); }
+  else if(player.dir==="E"){ ctx.moveTo(cx + s, cy); ctx.lineTo(cx - s*0.7, cy - s*0.75); ctx.lineTo(cx - s*0.7, cy + s*0.75); }
+  else if(player.dir==="S"){ ctx.moveTo(cx, cy + s); ctx.lineTo(cx - s*0.75, cy - s*0.7); ctx.lineTo(cx + s*0.75, cy - s*0.7); }
+  else { ctx.moveTo(cx - s, cy); ctx.lineTo(cx + s*0.7, cy - s*0.75); ctx.lineTo(cx + s*0.7, cy + s*0.75); }
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+
+  ctx.fillStyle = "#6b7280";
+  ctx.font = "12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+  ctx.fillText(`Шаг: ${ip}/${actionsQueue.length}`, 12, canvas.height - 12);
+}
+
+function usedLoopBlocks(){
+  const blocks = workspace.getAllBlocks(false);
+  const loopTypes = new Set(["maze_repeat_times","maze_until_goal"]);
+  return blocks.some(b => loopTypes.has(b.type));
+}
+function calcStars(actionsCount, parActions){
+  const par = Math.max(1, Number(parActions||1));
+  const r = actionsCount / par;
+  if (r <= 1.00) return 5;
+  if (r <= 1.25) return 4;
+  if (r <= 1.60) return 3;
+  if (r <= 2.20) return 2;
+  return 1;
+}
+function compileProgram(throwOnEmpty=true){
+  api._ticks = 0;
+  const code = Blockly.JavaScript.workspaceToCode(workspace);
+  const actions = [];
+  const fn = new Function("actions","api", `"use strict";\n${code}\nreturn actions;`);
+  let out;
+  try { out = fn(actions, api); }
+  catch(e){ throw new Error("Ошибка в программе: " + e.message); }
+
+  if(throwOnEmpty && (!out || out.length===0)) throw new Error("Программа пустая: добавь блоки движения.");
+  if(out.length > 2500) throw new Error("Слишком много команд. Упростите программу.");
+  return {code, actions: out};
+}
+function enforceLevelRules(level, actionsCount){
+  const blocksCount = workspace.getAllBlocks(false).length;
+
+  if(level.maxBlocks && blocksCount > level.maxBlocks){
+    throw new Error(`Слишком много блоков: ${blocksCount}. Нужно не больше ${level.maxBlocks}.`);
+  }
+  if(level.requireLoop && !usedLoopBlocks()){
+    throw new Error("На этом уровне обязательно используй цикл (например «повторить … раз»).");
+  }
+  if(Number.isFinite(level.maxCommands) && actionsCount > level.maxCommands){
+    throw new Error(`Слишком много команд: ${actionsCount}. Нужно не больше ${level.maxCommands}.`);
+  }
+}
+
+function updateStarsBadge(){
+  const L = getAllLevels()[levelIndex];
+  const best = getBestStars(L.id);
+  $("starsText").textContent = best ? ("★".repeat(best) + "☆".repeat(5-best)) : "☆☆☆☆☆";
+}
+function updateTopTexts(){
+  const L = getAllLevels()[levelIndex];
+  $("leftSub").textContent = L.subtitle || "Доберись до цели!";
+  $("goalPill").textContent = "Задание: " + (L.goal || "—");
+
+  const parts = [];
+  if(L.maxBlocks) parts.push(`макс. блоков ${L.maxBlocks}`);
+  if(Number.isFinite(L.maxCommands)) parts.push(`макс. команд ${L.maxCommands}`);
+  if(L.requireLoop) parts.push("обязателен цикл");
+  $("limitPill").textContent = "Ограничение: " + (parts.length ? parts.join(", ") : "нет");
+
+  $("minPill").textContent = `Минимум: ${L.minCommands} команд`;
+  updateStarsBadge();
+}
+function initLevelSelect(){
+  const sel = $("levelSelect");
+  sel.innerHTML = "";
+  const levels = getAllLevels();
+  const progress = loadProgress();
+
+  levels.forEach((L, idx)=>{
+    const locked = (L.id > progress.unlocked);
+    const best = getBestStars(L.id);
+    const stars = best ? ("★".repeat(best) + "☆".repeat(5-best)) : "☆☆☆☆☆";
+    const opt = document.createElement("option");
+    opt.value = String(idx);
+    opt.disabled = locked;
+    opt.textContent = `${L.title}${locked ? " 🔒" : ""}${best ? " • " + stars : ""}`;
+    sel.appendChild(opt);
+  });
+
+  const cur = levels[levelIndex]?.id || 1;
+  if(cur > progress.unlocked) levelIndex = Math.max(0, progress.unlocked - 1);
+  sel.value = String(levelIndex);
+}
+
+/* Starter blocks */
+function renderBlock(b){
+  try{ if (typeof b.initSvg === "function") b.initSvg(); if (typeof b.render === "function") b.render(); }catch{}
+}
+function addStarterBlocks(level){
+  if(level.toolbox === "move"){
+    const b = workspace.newBlock("maze_move_forward");
+    b.moveBy(40, 40);
+    renderBlock(b);
+    return;
+  }
+  if(level.toolbox === "turn"){
+    const b1 = workspace.newBlock("maze_move_forward");
+    const b2 = workspace.newBlock("maze_turn_right");
+    b1.moveBy(40,40);
+    b2.moveBy(40,120);
+    renderBlock(b1); renderBlock(b2);
+    try{ b1.nextConnection.connect(b2.previousConnection); }catch{}
+    return;
+  }
+  if(level.toolbox === "repeat"){
+    const rep = workspace.newBlock("maze_repeat_times");
+    rep.setFieldValue(4, "COUNT");
+    rep.moveBy(40,40);
+    renderBlock(rep);
+    const f = workspace.newBlock("maze_move_forward");
+    f.moveBy(70,120);
+    renderBlock(f);
+    try{
+      const doConn = rep.getInput("DO")?.connection;
+      if(doConn && f.previousConnection) doConn.connect(f.previousConnection);
+    }catch{}
+    return;
+  }
+  const rep = workspace.newBlock("maze_until_goal");
+  rep.moveBy(40,40);
+  renderBlock(rep);
+
+  const cond = workspace.newBlock("maze_if_path");
+  cond.moveBy(70,120);
+  renderBlock(cond);
+
+  const f = workspace.newBlock("maze_move_forward");
+  f.moveBy(100,200);
+  renderBlock(f);
+
+  try{
+    const doConn1 = rep.getInput("DO")?.connection;
+    if(doConn1 && cond.previousConnection) doConn1.connect(cond.previousConnection);
+    const doConn2 = cond.getInput("DO")?.connection;
+    if(doConn2 && f.previousConnection) doConn2.connect(f.previousConnection);
+  }catch{}
+}
+
+function stopRun(){
+  running = false;
+  if(timer){ clearInterval(timer); timer=null; }
+}
+function resetGame(clearBlocks=false){
+  stopRun();
+  player = {...start};
+  actionsQueue = [];
+  ip = 0;
+  setStatus("Готово");
+  if(clearBlocks){
+    workspace.clear();
+    addStarterBlocks(getAllLevels()[levelIndex]);
+  }
+  draw();
+}
+function applyAction(a){
+  if(a.t==="L"){ player.dir = DIRS[(DIRS.indexOf(player.dir)+3)%4]; return true; }
+  if(a.t==="R"){ player.dir = DIRS[(DIRS.indexOf(player.dir)+1)%4]; return true; }
+  if(a.t==="F"){
+    if(!api.isPathForward()){
+      setMsg("err", "Ты врезался в стену. Используй повороты, а на сложных уровнях — условие «если впереди свободно».");
+      setStatus("Столкновение");
+      stopRun();
+      return false;
+    }
+    const [dx,dy] = VEC[player.dir];
+    player.x += dx; player.y += dy;
+    return true;
+  }
+  return true;
+}
+
+function showFinishModal(){ $("finishModal").style.display="flex"; }
+function hideFinishModal(){ $("finishModal").style.display="none"; }
+
+function checkWin(){
+  if(api.isAtGoal()){
+    const L = getAllLevels()[levelIndex];
+    const stars = calcStars(ip, L.parActions);
+    setBestStars(L.id, stars);
+    unlockNextLevel(L.id);
+
+    setMsg("ok", `Победа! Оценка: ${"★".repeat(stars)}${"☆".repeat(5-stars)} (сохранено)`);
+    setStatus("Победа");
+
+    updateStarsBadge();
+    initLevelSelect();
+
+    const levels = getAllLevels();
+    const lastId = levels[levels.length-1].id;
+    if(L.id === lastId){
+      markFinishedAll();
+      showFinishModal();
+    }
+    stopRun();
+    return true;
+  }
+  return false;
+}
+function stepOnce(){
+  if(ip >= actionsQueue.length){
+    setMsg("warn", "Команды закончились. Добавь блоки или улучшай алгоритм.");
+    setStatus("Окончено");
+    stopRun();
+    return;
+  }
+  setStatus("Выполняю…");
+  const ok = applyAction(actionsQueue[ip]);
+  ip++;
+  draw();
+  if(ok) checkWin();
+}
+function run(){
+  stopRun();
+  const L = getAllLevels()[levelIndex];
+  try{
+    const compiled = compileProgram(true);
+    enforceLevelRules(L, compiled.actions.length);
+    actionsQueue = compiled.actions;
+    ip = 0;
+  }catch(e){
+    setMsg("err", e.message);
+    setStatus("Ошибка");
+    return;
+  }
+
+  running = true;
+  setMsg("info", "Запуск… (можно нажать «Сброс»)");
+  setStatus("Запуск");
+  timer = setInterval(()=>{ if(running) stepOnce(); }, 230);
+}
+function step(){
+  stopRun();
+  const L = getAllLevels()[levelIndex];
+  if(actionsQueue.length===0 && ip===0){
+    try{
+      const compiled = compileProgram(true);
+      enforceLevelRules(L, compiled.actions.length);
+      actionsQueue = compiled.actions;
+    }catch(e){
+      setMsg("err", e.message);
+      setStatus("Ошибка");
+      return;
+    }
+  }
+  stepOnce();
+}
+function loadLevel(idx){
+  const levels = getAllLevels();
+  levelIndex = Math.max(0, Math.min(idx, levels.length-1));
+  const L = levels[levelIndex];
+
+  const tbDom = toolboxXmlToDom(toolboxXmlFor(L));
+  if(typeof workspace.updateToolbox === "function") workspace.updateToolbox(tbDom);
+
+  parseLevel(L);
+  resetGame(true);
+  updateTopTexts();
+  setMsg("info", `<strong>Подсказка:</strong> ${L.hint || "Собери программу и запусти."}`);
+  setStatus("Готово");
+}
+
+/* =========================
+   Editor (teacher)
+========================= */
+function showEditor(){ $("editorModal").style.display="flex"; syncEditorFromSelected(); syncEditorJson(); }
+function hideEditor(){ $("editorModal").style.display="none"; }
+
+function parseGridText(txt){
+  const lines = txt.split("\n").map(s=>s.trim()).filter(Boolean);
+  if(lines.length < 3) throw new Error("Сетка слишком маленькая.");
+  const len = lines[0].length;
+  if(!lines.every(r=>r.length===len)) throw new Error("Все строки сетки должны быть одной длины.");
+  const joined = lines.join("\n");
+  if(!joined.includes("S")) throw new Error("Нужна стартовая клетка S.");
+  if(!joined.includes("G")) throw new Error("Нужна цель G.");
+  const valid = new Set(["#",".","S","G"]);
+  for(const r of lines){
+    for(const ch of r){
+      if(!valid.has(ch)) throw new Error(`Недопустимый символ «${ch}». Разрешены только # . S G`);
+    }
+  }
+  return lines;
+}
+function getSelectedLevelIndex(){ return Number($("levelSelect").value || 0); }
+
+function syncEditorFromSelected(){
+  const L = getAllLevels()[getSelectedLevelIndex()];
+  if(!L) return;
+  $("edTitle").value = L.title || "";
+  $("edGoal").value = L.goal || "";
+  $("edHint").value = L.hint || "";
+  $("edRequireLoop").checked = !!L.requireLoop;
+  $("edMaxBlocks").value = L.maxBlocks ?? "";
+  $("edMaxCommands").value = L.maxCommands ?? "";
+  $("edParActions").value = L.parActions ?? "";
+  $("edGrid").value = (L.grid || []).join("\n");
+}
+function collectEditorLevel(requireValidGrid=true){
+  const title = ($("edTitle").value || "").trim() || "Уровень";
+  const goalT  = ($("edGoal").value || "").trim()  || "Дойди до цели.";
+  const hintT  = ($("edHint").value || "").trim()  || "";
+  const requireLoop = $("edRequireLoop").checked;
+  const maxBlocks = $("edMaxBlocks").value === "" ? undefined : Number($("edMaxBlocks").value);
+  const maxCommands = $("edMaxCommands").value === "" ? undefined : Number($("edMaxCommands").value);
+  const parActions = $("edParActions").value === "" ? undefined : Number($("edParActions").value);
+  const gridLines = requireValidGrid ? parseGridText($("edGrid").value)
+                                     : $("edGrid").value.split("\n").map(s=>s.trim()).filter(Boolean);
+
+  const cur = getAllLevels()[getSelectedLevelIndex()];
+  return {
+    title,
+    subtitle: cur.subtitle || "Уровень",
+    goal: goalT,
+    hint: hintT,
+    requireLoop,
+    maxBlocks,
+    maxCommands,
+    parActions,
+    toolbox: cur.toolbox || "turn",
+    grid: gridLines
+  };
+}
+function syncEditorJson(){
+  try{
+    const obj = collectEditorLevel(false);
+    $("edJson").value = JSON.stringify(obj, null, 2);
+  }catch{}
+}
+function saveEditsToCurrentLevel(){
+  const idx = getSelectedLevelIndex();
+  const current = getAllLevels()[idx];
+  if(!current) return;
+
+  const updated = collectEditorLevel(true);
+  const min = shortestCommands(updated);
+  if(!Number.isFinite(min) || min===Infinity) throw new Error("Лабиринт не имеет решения (цель недостижима).");
+  updated.minCommands = min;
+
+  if(updated.maxCommands !== undefined) updated.maxCommands = Math.max(updated.maxCommands, min);
+
+  const baseCount = TUTOR_LEVELS.length + GENERATED_LEVELS.length;
+  const isCustom = current.id > baseCount;
+
+  if(isCustom){
+    const custom = loadCustomLevels();
+    const i = custom.findIndex(x=>x.id === current.id);
+    if(i === -1) throw new Error("Пользовательский уровень не найден в хранилище.");
+    custom[i] = { ...custom[i], ...updated, id: current.id };
+    saveCustomLevels(custom);
+  }else{
+    const overrides = loadOverrides();
+    overrides[String(current.id)] = {
+      title: updated.title,
+      goal: updated.goal,
+      hint: updated.hint,
+      requireLoop: updated.requireLoop,
+      maxBlocks: updated.maxBlocks,
+      maxCommands: updated.maxCommands,
+      parActions: updated.parActions,
+      grid: updated.grid,
+    };
+    saveOverrides(overrides);
+  }
+
+  setMsg("ok", "Изменения сохранены в этом уровне (не создан новый).");
+  initLevelSelect();
+  loadLevel(idx);
+  syncEditorFromSelected();
+  syncEditorJson();
+}
+function recalcCriteriaForEditor(){
+  const tmp = collectEditorLevel(true);
+  const min = shortestCommands(tmp);
+  if(!Number.isFinite(min) || min===Infinity) throw new Error("Лабиринт не имеет решения (цель недостижима).");
+
+  const slack = (min<=12) ? 2 : (min<=40) ? 6 : 10;
+  $("edParActions").value = min;
+  $("edMaxCommands").value = min + slack;
+  setMsg("ok", `Пересчитано: минимум ${min}, рекоменд. макс. команд ${min+slack}.`);
+  syncEditorJson();
+}
+function previewEditorLevel(){
+  const tmp = normalizeCriteria(collectEditorLevel(true));
+  parseLevel(tmp);
+  resetGame(false);
+  draw();
+  setMsg("info", "Предпросмотр открыт (ещё не сохранено).");
+}
+function exportEditorJson(){
+  const obj = collectEditorLevel(true);
+  $("edJson").value = JSON.stringify(obj, null, 2);
+  setMsg("ok", "Экспорт готов: JSON в поле ниже.");
+}
+function importEditorJson(){
+  const obj = JSON.parse($("edJson").value);
+  if(!obj || typeof obj !== "object") throw new Error("Неверный JSON.");
+  if(!Array.isArray(obj.grid)) throw new Error("Нужно поле grid: массив строк.");
+  parseGridText(obj.grid.join("\n"));
+
+  $("edTitle").value = obj.title || "Уровень";
+  $("edGoal").value = obj.goal || "Дойди до цели.";
+  $("edHint").value = obj.hint || "";
+  $("edRequireLoop").checked = !!obj.requireLoop;
+  $("edMaxBlocks").value = obj.maxBlocks ?? "";
+  $("edMaxCommands").value = obj.maxCommands ?? "";
+  $("edParActions").value = obj.parActions ?? "";
+  $("edGrid").value = obj.grid.join("\n");
+  setMsg("ok", "Импорт выполнен. Теперь нажми «Сохранить изменения».");
+}
+function resetEditsForCurrentLevel(){
+  const idx = getSelectedLevelIndex();
+  const current = getAllLevels()[idx];
+  if(!current) return;
+  clearOverrideFor(current.id);
+  setMsg("ok", "Правки этого уровня сброшены.");
+  initLevelSelect();
+  loadLevel(idx);
+  syncEditorFromSelected();
+  syncEditorJson();
+}
+
+/* =========================
+   Workspace info
+========================= */
+workspace.addChangeListener(()=>{
+  const blocks = workspace.getAllBlocks(false).length;
+  $("blocksInfo").textContent = "Блоков: " + blocks;
+  try{
+    const compiled = compileProgram(false);
+    $("actionsInfo").textContent = "Команд: " + compiled.actions.length;
+  }catch{
+    $("actionsInfo").textContent = "Команд: —";
+  }
+});
+
+/* =========================
+   Events
+========================= */
+$("levelSelect").addEventListener("change", e => loadLevel(Number(e.target.value)));
+$("runBtn").addEventListener("click", run);
+$("stepBtn").addEventListener("click", step);
+$("resetBtn").addEventListener("click", ()=> resetGame(false));
+
+$("showCodeBtn").addEventListener("click", ()=>{
+  try{
+    const {code} = compileProgram(false);
+    alert(code.trim() ? code : "(пока нет кода — добавь блоки)");
+  }catch(e){ alert("Ошибка: " + e.message); }
+});
+
+/* Editor PIN gate: спрашиваем PIN каждый раз */
+$("editorOpenBtn").addEventListener("click", ()=>{
+  if(!requireTeacher()) return;
+  showEditor();
+});
+$("editorCloseBtn").addEventListener("click", hideEditor);
+
+$("edSaveBtn").addEventListener("click", ()=>{
+  try{ saveEditsToCurrentLevel(); }
+  catch(e){ setMsg("err", "Сохранение: " + e.message); }
+});
+$("edRecalcBtn").addEventListener("click", ()=>{
+  try{ recalcCriteriaForEditor(); }
+  catch(e){ setMsg("err", "Пересчёт: " + e.message); }
+});
+$("edResetOverridesBtn").addEventListener("click", ()=>{
+  try{ resetEditsForCurrentLevel(); }
+  catch(e){ setMsg("err", "Сброс: " + e.message); }
+});
+$("edPreviewBtn").addEventListener("click", ()=>{
+  try{ previewEditorLevel(); }
+  catch(e){ setMsg("err", "Предпросмотр: " + e.message); }
+});
+$("edExportBtn").addEventListener("click", ()=>{
+  try{ exportEditorJson(); }
+  catch(e){ setMsg("err", "Экспорт: " + e.message); }
+});
+$("edImportBtn").addEventListener("click", ()=>{
+  try{ importEditorJson(); }
+  catch(e){ setMsg("err", "Импорт: " + e.message); }
+});
+
+/* ✅ Смена PIN в режиме учителя */
+$("changePinBtn").addEventListener("click", ()=>{
+  const cur = prompt("Введите текущий PIN:");
+  if(cur === null) return;
+  if(String(cur) !== getTeacherPin()){
+    alert("Текущий PIN неверный.");
+    return;
+  }
+
+  const p1 = prompt("Введите новый PIN (минимум 4 символа):");
+  if(p1 === null) return;
+  const np = String(p1).trim();
+  if(np.length < 4){
+    alert("PIN слишком короткий. Минимум 4 символа.");
+    return;
+  }
+
+  const p2 = prompt("Повторите новый PIN:");
+  if(p2 === null) return;
+  if(String(p2).trim() !== np){
+    alert("PIN не совпадает.");
+    return;
+  }
+
+  setTeacherPin(np);
+  alert("PIN успешно изменён.");
+});
+
+$("editorHelpBtn").addEventListener("click", ()=>{
+  alert(
+    "Редактор доступен только учителю.\n\n" +
+    "• Нажмите «🔒 Редактор», введите PIN (спрашивается каждый раз).\n" +
+    "• «Сменить PIN» — меняет пароль на этом компьютере (в браузере).\n" +
+    "• «Сохранить изменения» обновляет текущий выбранный уровень.\n" +
+    "• «Пересчитать критерии» ставит пар=минимум, а макс. команд = минимум + запас."
+  );
+});
+
+/* Finish modal */
+$("finishCloseBtn").addEventListener("click", hideFinishModal);
+$("finishReplayBtn").addEventListener("click", ()=>{
+  hideFinishModal();
+  const p = loadProgress();
+  p.unlocked = 1; p.finishedAll = false;
+  saveProgress(p);
+  initLevelSelect();
+  loadLevel(0);
+});
+
+window.addEventListener("resize", ()=> Blockly.svgResize(workspace));
+
+/* =========================
+   Init
+========================= */
+function init(){
+  initLevelSelect();
+  loadLevel(0);
+}
+try { init(); } catch(e){ showFatalError(e); }
+
+(function(){
+  let t=null;
+  function resizeBlockly(){
+    try{ Blockly.svgResize(workspace); }catch(e){}
+  }
+  function schedule(){
+    if(t) clearTimeout(t);
+    t = setTimeout(resizeBlockly, 150);
+  }
+  window.addEventListener("orientationchange", schedule);
+  window.addEventListener("resize", schedule);
+  window.addEventListener("load", schedule);
+  // also after fonts/layout settle
+  setTimeout(resizeBlockly, 300);
+  setTimeout(resizeBlockly, 800);
+})();
+
+</script>
+</body>
+</html>
